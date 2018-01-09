@@ -70,6 +70,62 @@ class Network(object):
                 gradient descent using backpropagation to a single mini batch.
                 The ``mini_batch`` is a list of tuples ``(x, y)``, and ``eta``
                 is the learning rate."""
+        nable_b = [np.zeros(b.shape) for b in self.biases]
+        nable_w = [np.zeros(w.shape) for w in self.weights]
+        for x, y in mini_batch:
+            delta_nabla_b, delta_nable_w = self.backprop(x, y)
+            nable_b = [nb+dnb for nb, dnb in zip(nable_b, delta_nabla_b)]
+            nable_w = [nw+dnw for nw, dnw in zip(nable_w, delta_nable_w)]
+        self.weights = [w-(learning_rate/len(mini_batch))*nw for w, nw in zip(self.weights, nable_w)]
+        self.biases = [b-(learning_rate/len(mini_batch))*nb for b,nb in zip(self.biases, nable_b)]
+
+    def backprop(self, x, y):
+        """Return a tuple ``(nabla_b, nabla_w)`` representing the
+               gradient for the cost function C_x.  ``nabla_b`` and
+               ``nabla_w`` are layer-by-layer lists of numpy arrays, similar
+               to ``self.biases`` and ``self.weights``."""
+        nable_b = [np.zeros(b.shape) for b in self.biases]
+        nable_w = [np.zeros(w.shape) for w in self.weights]
+        # feedforward
+        activation = x
+        activations = [x]       # list to store all the activations, layer by layer
+        zs =[]      #list to store all the z vectors, layer by layer
+        for b, w in zip(self.biases, self.weights):
+            z = np.dot(w, activation)+b
+            zs.append(z)
+            activation = sigmoid(z)
+            activations.append(activation)
+        # backward pass
+        delta = self.cost_derivative(activations[-1], y) * \
+                sigmoid_prime(zs[-1])
+        nable_b[-1] = delta
+        nable_w[-1] = np.dot(delta, activations[-2].transpose())
+        # Note that the variable l in the loop below is used a little
+        # differently to the notation in Chapter 2 of the book.  Here,
+        # l = 1 means the last layer of neurons, l = 2 is the
+        # second-last layer, and so on.  It's a renumbering of the
+        # scheme in the book, used here to take advantage of the fact
+        # that Python can use negative indices in lists.
+        for l in range(2, self.num_layers):
+            z = zs[-1]
+            sp = sigmoid_prime(z)
+            delta = np.dot(self.weights[-l+1].transpose(), delta) * sp
+            nable_b[-1] = delta
+            nable_w[-1] = np.dot(delta, activations[-l-1].transpose())
+        return (nable_b, nable_w)
+
+    def evaluate(self, test_data):
+        """Return the number of test inputs for which the neural
+                network outputs the correct result. Note that the neural
+                network's output is assumed to be the index of whichever
+                neuron in the final layer has the highest activation."""
+        test_results = [(np.argmax(self.feedforward(x)), y) for (x, y) in test_data]
+        return sum(int(x==y) for (x, y) in test_results)
+
+    def cost_derivative(self,output_predictions, y):
+        """Return the vector of partial derivatives \partial C_x /
+               \partial a for the output activations."""
+        return (output_predictions-y)
 
 
 
