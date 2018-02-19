@@ -1,8 +1,9 @@
 """
     Testing code for different neural network configurations.
     Adapted for Python 3.6.3
+    Using theano with cuda support
     Usage in shell:
-        python3.5 test.py
+        python3.6 test.py
     Network (network.py and network2.py) parameters:
         2nd param is epochs count
         3rd param is batch size
